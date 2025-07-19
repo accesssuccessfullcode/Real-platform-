@@ -52,7 +52,6 @@ const elements = {
 function initGame() {
     updateHighScore();
     setupEventListeners();
-    createColorBoxes();
 }
 
 // Setup event listeners
@@ -75,6 +74,7 @@ function setupEventListeners() {
 
 // Start the game
 function startGame() {
+    console.log('Starting game...');
     gameState.score = 0;
     gameState.timeLeft = GAME_CONFIG.timeLimit;
     gameState.currentRound = 0;
@@ -94,6 +94,7 @@ function startGame() {
     
     // Add entrance animation
     elements.gameArea.style.animation = 'slideInUp 0.5s ease';
+    console.log('Game started successfully!');
 }
 
 // Generate a new round
@@ -143,7 +144,7 @@ function createColorBoxes(colors, correctColor) {
         colorBox.dataset.color = color.name;
         colorBox.dataset.isCorrect = (color.name === correctColor.name).toString();
         
-        colorBox.addEventListener('click', () => handleColorClick(colorBox));
+        colorBox.addEventListener('click', () => handleColorClickWithSound(colorBox));
         
         elements.colorGrid.appendChild(colorBox);
         
@@ -346,7 +347,11 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Initialize the game when the page loads
-document.addEventListener('DOMContentLoaded', initGame);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing game...');
+    initGame();
+    console.log('Game initialized successfully!');
+});
 
 // Add keyboard shortcuts
 document.addEventListener('keydown', (e) => {
@@ -401,35 +406,42 @@ document.addEventListener('touchend', (e) => {
 
 // Add sound effects (optional)
 function playSound(type) {
-    // You can add sound effects here
-    // For now, we'll just create a simple beep sound
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = type === 'correct' ? 800 : 400;
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
+    try {
+        // You can add sound effects here
+        // For now, we'll just create a simple beep sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = type === 'correct' ? 800 : 400;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+        console.log('Audio not supported in this browser');
+    }
 }
 
 // Enhanced color click handler with sound
-const originalHandleColorClick = handleColorClick;
-handleColorClick = function(colorBox) {
+function handleColorClickWithSound(colorBox) {
     if (!gameState.isPlaying || gameState.isPaused) return;
     
     const isCorrect = colorBox.dataset.isCorrect === 'true';
     
     // Play sound effect
-    playSound(isCorrect ? 'correct' : 'incorrect');
+    try {
+        playSound(isCorrect ? 'correct' : 'incorrect');
+    } catch (error) {
+        console.log('Sound not available');
+    }
     
     // Call original handler
-    originalHandleColorClick.call(this, colorBox);
-};
+    handleColorClick(colorBox);
+}

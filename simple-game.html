@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Color Match Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        .score-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-weight: 600;
+        }
+        
+        .color-word {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 30px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+        }
+        
+        .color-box {
+            aspect-ratio: 1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 3px solid transparent;
+        }
+        
+        .color-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-box.correct {
+            border-color: #2ecc71;
+            animation: pulse 0.6s ease;
+        }
+        
+        .color-box.incorrect {
+            border-color: #e74c3c;
+            animation: shake 0.6s ease;
+        }
+        
+        .start-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
+        }
+        
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎨 Color Match</h1>
+        
+        <div class="score-board">
+            <div class="score-item">Score: <span id="score">0</span></div>
+            <div class="score-item">Time: <span id="time">30</span></div>
+            <div class="score-item">High: <span id="highScore">0</span></div>
+        </div>
+        
+        <div id="menu">
+            <h2>How to Play</h2>
+            <p>Match the color name with the correct color box!</p>
+            <p>Click the color box that matches the word shown.</p>
+            <button class="start-btn" onclick="startGame()">Start Game</button>
+        </div>
+        
+        <div id="gameArea" class="hidden">
+            <div class="color-word" id="colorWord">RED</div>
+            <div class="color-grid" id="colorGrid"></div>
+            <div class="game-controls">
+                <button class="control-btn" onclick="pauseGame()">Pause</button>
+                <button class="control-btn" onclick="restartGame()">Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game Configuration
+        const colors = [
+            { name: 'RED', hex: '#e74c3c' },
+            { name: 'BLUE', hex: '#3498db' },
+            { name: 'GREEN', hex: '#2ecc71' },
+            { name: 'YELLOW', hex: '#f1c40f' },
+            { name: 'PURPLE', hex: '#9b59b6' },
+            { name: 'ORANGE', hex: '#e67e22' }
+        ];
+        
+        let gameState = {
+            score: 0,
+            timeLeft: 30,
+            isPlaying: false,
+            isPaused: false,
+            timer: null,
+            highScore: localStorage.getItem('highScore') || 0
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('highScore').textContent = gameState.highScore;
+        });
+        
+        function startGame() {
+            console.log('Starting game...');
+            gameState.score = 0;
+            gameState.timeLeft = 30;
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+            
+            updateScore();
+            updateTime();
+            startTimer();
+            generateNewRound();
+        }
+        
+        function generateNewRound() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const shuffledColors = shuffleArray([...colors]);
+            const correctColor = shuffledColors[0];
+            const wrongColor = shuffledColors[1];
+            
+            const shouldMatch = Math.random() > 0.5;
+            
+            if (shouldMatch) {
+                document.getElementById('colorWord').textContent = correctColor.name;
+                document.getElementById('colorWord').style.color = correctColor.hex;
+                createColorBoxes([correctColor, wrongColor], correctColor);
+            } else {
+                document.getElementById('colorWord').textContent = correctColor.name;
+                document.getElementById('colorWord').style.color = wrongColor.hex;
+                createColorBoxes([wrongColor, correctColor], correctColor);
+            }
+        }
+        
+        function createColorBoxes(colors, correctColor) {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            
+            const shuffledColors = shuffleArray(colors);
+            
+            shuffledColors.forEach((color, index) => {
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = color.hex;
+                colorBox.dataset.isCorrect = (color.name === correctColor.name).toString();
+                
+                colorBox.addEventListener('click', () => handleColorClick(colorBox));
+                grid.appendChild(colorBox);
+            });
+        }
+        
+        function handleColorClick(colorBox) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const isCorrect = colorBox.dataset.isCorrect === 'true';
+            
+            if (isCorrect) {
+                colorBox.classList.add('correct');
+                gameState.score += 10;
+                updateScore();
+                
+                setTimeout(() => {
+                    colorBox.classList.remove('correct');
+                    generateNewRound();
+                }, 500);
+            } else {
+                colorBox.classList.add('incorrect');
+                gameState.score = Math.max(0, gameState.score - 5);
+                updateScore();
+                
+                setTimeout(() => {
+                    colorBox.classList.remove('incorrect');
+                }, 500);
+            }
+        }
+        
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                if (!gameState.isPaused) {
+                    gameState.timeLeft--;
+                    updateTime();
+                    
+                    if (gameState.timeLeft <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+        
+        function pauseGame() {
+            if (!gameState.isPlaying) return;
+            gameState.isPaused = !gameState.isPaused;
+        }
+        
+        function restartGame() {
+            endGame();
+            setTimeout(startGame, 100);
+        }
+        
+        function endGame() {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+                gameState.timer = null;
+            }
+            
+            if (gameState.score > gameState.highScore) {
+                gameState.highScore = gameState.score;
+                localStorage.setItem('highScore', gameState.highScore);
+                document.getElementById('highScore').textContent = gameState.highScore;
+            }
+            
+            alert(`Game Over! Your score: ${gameState.score}`);
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('menu').classList.remove('hidden');
+        }
+        
+        function updateScore() {
+            document.getElementById('score').textContent = gameState.score;
+        }
+        
+        function updateTime() {
+            document.getElementById('time').textContent = gameState.timeLeft;
+        }
+        
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+    </script>
+</body>
+</html>

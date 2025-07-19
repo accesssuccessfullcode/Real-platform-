@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #ee5a24;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎮 Game Test</h1>
+        <div class="status" id="status">Ready to test...</div>
+        
+        <button onclick="testGame()">Test Game Functions</button>
+        <button onclick="testElements()">Test DOM Elements</button>
+        <button onclick="testStartGame()">Test Start Game</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Test functions
+        function testGame() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing Game Functions...</h3>';
+            
+            try {
+                // Test if functions exist
+                if (typeof startGame === 'function') {
+                    results.innerHTML += '<p>✅ startGame function exists</p>';
+                } else {
+                    results.innerHTML += '<p>❌ startGame function missing</p>';
+                }
+                
+                if (typeof generateNewRound === 'function') {
+                    results.innerHTML += '<p>✅ generateNewRound function exists</p>';
+                } else {
+                    results.innerHTML += '<p>❌ generateNewRound function missing</p>';
+                }
+                
+                if (typeof createColorBoxes === 'function') {
+                    results.innerHTML += '<p>✅ createColorBoxes function exists</p>';
+                } else {
+                    results.innerHTML += '<p>❌ createColorBoxes function missing</p>';
+                }
+                
+                if (typeof shuffleArray === 'function') {
+                    results.innerHTML += '<p>✅ shuffleArray function exists</p>';
+                } else {
+                    results.innerHTML += '<p>❌ shuffleArray function missing</p>';
+                }
+                
+            } catch (error) {
+                results.innerHTML += '<p>❌ Error: ' + error.message + '</p>';
+            }
+        }
+        
+        function testElements() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing DOM Elements...</h3>';
+            
+            try {
+                const elements = [
+                    'instructions', 'gameArea', 'startBtn', 'colorWord', 
+                    'colorGrid', 'score', 'time', 'highScore'
+                ];
+                
+                elements.forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        results.innerHTML += `<p>✅ ${elementId} found</p>`;
+                    } else {
+                        results.innerHTML += `<p>❌ ${elementId} missing</p>`;
+                    }
+                });
+                
+            } catch (error) {
+                results.innerHTML += '<p>❌ Error: ' + error.message + '</p>';
+            }
+        }
+        
+        function testStartGame() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing Start Game...</h3>';
+            
+            try {
+                if (typeof startGame === 'function') {
+                    startGame();
+                    results.innerHTML += '<p>✅ startGame called successfully</p>';
+                } else {
+                    results.innerHTML += '<p>❌ startGame function not available</p>';
+                }
+            } catch (error) {
+                results.innerHTML += '<p>❌ Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Load the game script
+        const script = document.createElement('script');
+        script.src = 'script.js';
+        script.onload = function() {
+            document.getElementById('status').textContent = 'Game script loaded successfully!';
+        };
+        script.onerror = function() {
+            document.getElementById('status').textContent = 'Error loading game script!';
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
